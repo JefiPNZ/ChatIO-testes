@@ -24,12 +24,9 @@ public class ServerTest {
         this.reader = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
     }
     
-    public void testMessage(String message, String expect) throws IOException, Exception{
+    public String testMessage(String message) throws IOException, Exception{
         this.writer.println(message);
-        String response = this.reader.readLine();
-        if(!response.equals(expect)){
-            throw new Exception("Retorno inválido no cadastro de usuário: " + response);
-        }
+        return this.reader.readLine();
     }
     
     public void closeConnection() throws IOException{

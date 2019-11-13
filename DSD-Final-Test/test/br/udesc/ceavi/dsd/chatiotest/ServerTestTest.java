@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -38,13 +39,13 @@ public class ServerTestTest {
     @Test
     public void testBeginTests() throws Exception {
         String data = "{"
-                    + "\"birthdate\":\"17/06/1999\""
-                    + "\"email\":\"teste@teste.com\""
-                    + "\"nickname\":\"Teste\""
+                    + "\"birthdate\":\"17/06/1999\","
+                    + "\"email\":\"teste@teste.com\","
+                    + "\"nickname\":\"Teste\","
                     + "\"password\":\"123456\""
                     + "}";
-        this.server.testMessage(MessageList.MESSAGE_CREATE_USER.toString() + data,
-                                MessageList.MESSAGE_SUCCESS.toString());
+        String response = this.server.testMessage(MessageList.MESSAGE_CREATE_USER.toString() + data);
+        Assert.assertEquals(MessageList.MESSAGE_SUCCESS.toString(), response);
     }
     
 }
