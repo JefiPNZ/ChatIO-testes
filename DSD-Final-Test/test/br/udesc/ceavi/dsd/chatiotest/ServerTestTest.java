@@ -1,16 +1,17 @@
 package br.udesc.ceavi.dsd.chatiotest;
 
-import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.hamcrest.CoreMatchers;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * Testes de integração com o servidor.
@@ -39,7 +40,7 @@ public class ServerTestTest {
     }
 
     /**
-     * Teste do comando Create User.
+     * Teste do comando CreateUser.
      * @throws java.lang.Exception
      */
     @Test
@@ -48,7 +49,7 @@ public class ServerTestTest {
     }
 
     /**
-     * Teste do comando Create User.
+     * Teste do comando Login.
      * @throws java.lang.Exception
      */
     @Test
@@ -58,7 +59,7 @@ public class ServerTestTest {
     }
 
     /**
-     * Teste do comando Create User.
+     * Teste do comando GetUserData.
      * @throws java.lang.Exception
      */
     @Test
@@ -70,6 +71,99 @@ public class ServerTestTest {
         JsonObject jsonObject = JsonParser.parseString(res).getAsJsonObject();
         Assert.assertEquals("Teste Busca Usuario", jsonObject.get("nickname").getAsString());
         Assert.assertEquals("1999", jsonObject.get("birthDate").getAsString());
+    }
+
+    /**
+     * Teste do comando Connected.
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testConnected() throws Exception {
+        Assert.assertEquals("Usuário não foi criado", MessageList.MESSAGE_SUCCESS.toString(), this.createNewUser("Teste Conectado"));
+        Assert.assertEquals("Login não efetuado", MessageList.MESSAGE_SUCCESS.toString(), this.doLogin("Teste Conectado"));
+        String res = this.server.testMessage(MessageList.MESSAGE_CONNECTED_STATUS.toString());
+        Assert.assertEquals(MessageList.MESSAGE_SUCCESS.toString(), res);
+        // Testa por timeout, comentar quando for realizar outros testes.
+//        Thread.sleep(10000);
+//        res = this.server.testMessage(MessageList.MESSAGE_CONNECTED_STATUS.toString());
+//        Assert.assertNull(res);
+    }
+    
+    /**
+     * Teste do comando AddContact.
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testAddContact() throws Exception {
+        Assert.assertEquals("Usuário não foi criado", MessageList.MESSAGE_SUCCESS.toString(), this.createNewUser("Teste Add Contato 1"));
+        Assert.assertEquals("Login não efetuado", MessageList.MESSAGE_SUCCESS.toString(), this.doLogin("Teste Add Contato 1"));
+        Assert.assertEquals("Usuário não foi criado", MessageList.MESSAGE_SUCCESS.toString(), this.createNewUser("Teste Add Contato 2"));
+        String res = this.addNewContact("Teste Add Contato 2");
+        Assert.assertEquals(MessageList.MESSAGE_SUCCESS.toString(), res);
+        res = this.addNewContact("Teste Add Contato 3");
+        Assert.assertThat(res, CoreMatchers.startsWith(MessageList.MESSAGE_ERROR.toString()));
+    }
+    
+    /**
+     * Teste do comando GetContactList.
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testGetContactList() throws Exception {
+        Assert.assertEquals("Usuário não foi criado", MessageList.MESSAGE_SUCCESS.toString(), this.createNewUser("Teste Get Contato 1"));
+        Assert.assertEquals("Login não efetuado", MessageList.MESSAGE_SUCCESS.toString(), this.doLogin("Teste Get Contato 1"));
+        Assert.assertEquals("Usuário não foi criado", MessageList.MESSAGE_SUCCESS.toString(), this.createNewUser("Teste Get Contato 2"));
+        
+        String res = this.addNewContact("Teste Get Contato 2");
+        Assert.assertEquals(MessageList.MESSAGE_SUCCESS.toString(), res);
+        
+        res = this.server.testMessage(MessageList.MESSAGE_GET_CONTACT_LIST.toString());
+        res = res.replace("DATA>", "");
+        JsonArray firstContacts = JsonParser.parseString(res).getAsJsonArray();
+        Assert.assertThat(firstContacts.size(), Matchers.greaterThan(0));
+        String firstUser    = firstContacts.get(0).getAsJsonObject().get("user").getAsJsonObject().get("nickname").getAsString();
+        String firstContact = firstContacts.get(0).getAsJsonObject().get("contact").getAsJsonObject().get("nickname").getAsString();
+        
+        this.server = new ServerTest();
+        Assert.assertEquals("Login não efetuado", MessageList.MESSAGE_SUCCESS.toString(), this.doLogin("Teste Get Contato 2"));
+        res = this.server.testMessage(MessageList.MESSAGE_GET_CONTACT_LIST.toString());
+        res = res.replace("DATA>", "");
+        JsonArray secondContacts = JsonParser.parseString(res).getAsJsonArray();
+        Assert.assertThat(secondContacts.size(), Matchers.greaterThan(0));
+        String secondUser    = secondContacts.get(0).getAsJsonObject().get("user").getAsJsonObject().get("nickname").getAsString();
+        String secondContact = secondContacts.get(0).getAsJsonObject().get("contact").getAsJsonObject().get("nickname").getAsString();
+        
+        Assert.assertEquals(firstUser, secondUser);
+        Assert.assertEquals(firstContact, secondContact);
+    }
+    
+    /**
+     * Teste do comando RemoveContact.
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testRemoveContact() throws Exception {
+        Assert.assertEquals("Usuário não foi criado", MessageList.MESSAGE_SUCCESS.toString(), this.createNewUser("Teste Remove Contato 1"));
+        Assert.assertEquals("Login não efetuado", MessageList.MESSAGE_SUCCESS.toString(), this.doLogin("Teste Remove Contato 1"));
+        Assert.assertEquals("Usuário não foi criado", MessageList.MESSAGE_SUCCESS.toString(), this.createNewUser("Teste Remove Contato 2"));
+        
+        String res = this.addNewContact("Teste Remove Contato 2");
+        Assert.assertEquals(MessageList.MESSAGE_SUCCESS.toString(), res);
+        
+        String data = "{\"nickname\":\"Teste Remove Contato 2\"}";
+        res = this.server.testMessage(MessageList.MESSAGE_REMOVE_CONTACT.toString() + data);
+        Assert.assertEquals(MessageList.MESSAGE_SUCCESS.toString(), res);
+        res = this.server.testMessage(MessageList.MESSAGE_GET_CONTACT_LIST.toString());
+        res = res.replace("DATA>", "");
+        JsonArray firstContacts = JsonParser.parseString(res).getAsJsonArray();
+        Assert.assertEquals(0, firstContacts.size());
+    }
+    
+    protected String addNewContact(String nickname) throws Exception{
+        String data = "{"
+                    + "\"nickname\":\"" + nickname + "\""
+                    + "}";
+        return this.server.testMessage(MessageList.MESSAGE_ADD_CONTACT.toString() + data);
     }
     
     protected String createNewUser(String nickname) throws Exception{
