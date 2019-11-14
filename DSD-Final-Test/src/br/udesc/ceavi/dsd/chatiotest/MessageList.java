@@ -15,6 +15,7 @@ public enum MessageList {
     MESSAGE_ADD_CONTACT("ADDCONTACT>"),
     MESSAGE_REMOVE_CONTACT("REMOVECONTACT>"),
     MESSAGE_GET_CONTACT_LIST("GETCONTACT"),
+    MESSAGE_GET_USER_DATA("GETUSERDATA"),
     MESSAGE_DATA("DATA>");
     
     private final String message;
