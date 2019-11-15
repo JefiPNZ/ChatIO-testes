@@ -135,6 +135,7 @@ public class ServerTestTest {
         
         Assert.assertEquals(firstUser, secondUser);
         Assert.assertEquals(firstContact, secondContact);
+        System.out.println(res);
     }
     
     /**
