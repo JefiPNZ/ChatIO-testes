@@ -26,7 +26,12 @@ public class ServerTest {
     
     public String testMessage(String message) throws IOException, Exception{
         this.writer.println(message);
-        return this.reader.readLine();
+        try {
+            return this.reader.readLine();
+        }
+        catch(Exception ex){
+            return null;
+        }
     }
     
     public void closeConnection() throws IOException{

@@ -81,12 +81,16 @@ public class ServerTestTest {
     public void testConnected() throws Exception {
         Assert.assertEquals("Usuário não foi criado", MessageList.MESSAGE_SUCCESS.toString(), this.createNewUser("Teste Conectado"));
         Assert.assertEquals("Login não efetuado", MessageList.MESSAGE_SUCCESS.toString(), this.doLogin("Teste Conectado"));
-        String res = this.server.testMessage(MessageList.MESSAGE_CONNECTED_STATUS.toString());
-        Assert.assertEquals(MessageList.MESSAGE_SUCCESS.toString(), res);
+        String res;
+        for(int i = 0; i < 10; i++){
+            res = this.server.testMessage(MessageList.MESSAGE_CONNECTED_STATUS.toString());
+            Assert.assertEquals(MessageList.MESSAGE_SUCCESS.toString(), res);
+            Thread.sleep(500);
+        }
         // Testa por timeout, comentar quando for realizar outros testes.
-//        Thread.sleep(10000);
-//        res = this.server.testMessage(MessageList.MESSAGE_CONNECTED_STATUS.toString());
-//        Assert.assertNull(res);
+        Thread.sleep(10000);
+        res = this.server.testMessage(MessageList.MESSAGE_CONNECTED_STATUS.toString());
+        Assert.assertNull(res);
     }
     
     /**
@@ -135,7 +139,6 @@ public class ServerTestTest {
         
         Assert.assertEquals(firstUser, secondUser);
         Assert.assertEquals(firstContact, secondContact);
-        System.out.println(res);
     }
     
     /**
