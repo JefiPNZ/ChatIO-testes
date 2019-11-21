@@ -102,8 +102,12 @@ public class ServerTestTest {
         Assert.assertEquals("Usuário não foi criado", MessageList.MESSAGE_SUCCESS.toString(), this.createNewUser("Teste Add Contato 1"));
         Assert.assertEquals("Login não efetuado", MessageList.MESSAGE_SUCCESS.toString(), this.doLogin("Teste Add Contato 1"));
         Assert.assertEquals("Usuário não foi criado", MessageList.MESSAGE_SUCCESS.toString(), this.createNewUser("Teste Add Contato 2"));
+        this.server.testMessage(MessageList.MESSAGE_GET_CONTACT_LIST.toString());
         String res = this.addNewContact("Teste Add Contato 2");
         Assert.assertEquals(MessageList.MESSAGE_SUCCESS.toString(), res);
+        res = this.addNewContact("Teste Add Contato 2");
+        Assert.assertThat(res, CoreMatchers.startsWith(MessageList.MESSAGE_ERROR.toString()));
+        this.server.testMessage(MessageList.MESSAGE_GET_CONTACT_LIST.toString());
         res = this.addNewContact("Teste Add Contato 3");
         Assert.assertThat(res, CoreMatchers.startsWith(MessageList.MESSAGE_ERROR.toString()));
     }
@@ -121,6 +125,13 @@ public class ServerTestTest {
         String res = this.addNewContact("Teste Get Contato 2");
         Assert.assertEquals(MessageList.MESSAGE_SUCCESS.toString(), res);
         
+        ServerTest server = new ServerTest();
+        String data = "{"
+                    + "\"nickname\":\"Teste Get Contato 2\","
+                    + "\"password\":\"123456\""
+                    + "}";
+        Assert.assertEquals("Login não efetuado", MessageList.MESSAGE_SUCCESS.toString(), server.testMessage(MessageList.MESSAGE_LOGIN.toString() + data));
+        
         res = this.server.testMessage(MessageList.MESSAGE_GET_CONTACT_LIST.toString());
         res = res.replace("DATA>", "");
         JsonArray firstContacts = JsonParser.parseString(res).getAsJsonArray();
@@ -128,17 +139,15 @@ public class ServerTestTest {
         String firstUser    = firstContacts.get(0).getAsJsonObject().get("user").getAsJsonObject().get("nickname").getAsString();
         String firstContact = firstContacts.get(0).getAsJsonObject().get("contact").getAsJsonObject().get("nickname").getAsString();
         
-        this.server = new ServerTest();
-        Assert.assertEquals("Login não efetuado", MessageList.MESSAGE_SUCCESS.toString(), this.doLogin("Teste Get Contato 2"));
-        res = this.server.testMessage(MessageList.MESSAGE_GET_CONTACT_LIST.toString());
+        res = server.testMessage(MessageList.MESSAGE_GET_CONTACT_LIST.toString());
         res = res.replace("DATA>", "");
         JsonArray secondContacts = JsonParser.parseString(res).getAsJsonArray();
         Assert.assertThat(secondContacts.size(), Matchers.greaterThan(0));
         String secondUser    = secondContacts.get(0).getAsJsonObject().get("user").getAsJsonObject().get("nickname").getAsString();
         String secondContact = secondContacts.get(0).getAsJsonObject().get("contact").getAsJsonObject().get("nickname").getAsString();
         
-        Assert.assertEquals(firstUser, secondUser);
-        Assert.assertEquals(firstContact, secondContact);
+        Assert.assertEquals(firstUser, secondContact);
+        Assert.assertEquals(firstContact, secondUser);
     }
     
     /**
