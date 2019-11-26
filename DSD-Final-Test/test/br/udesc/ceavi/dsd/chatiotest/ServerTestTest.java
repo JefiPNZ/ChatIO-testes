@@ -72,6 +72,29 @@ public class ServerTestTest {
         Assert.assertEquals("Teste Busca Usuario", jsonObject.get("nickname").getAsString());
         Assert.assertEquals("1999", jsonObject.get("birthDate").getAsString());
     }
+    
+    /**
+     * Teste do comando AlterUser.
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testAlterUser() throws Exception {
+        Assert.assertEquals("Usuário não foi criado", MessageList.MESSAGE_SUCCESS.toString(), this.createNewUser("Teste Alter User"));
+        Assert.assertEquals("Usuário não foi criado", MessageList.MESSAGE_SUCCESS.toString(), this.createNewUser("Teste Alter User 2"));
+        Assert.assertEquals("Login não efetuado", MessageList.MESSAGE_SUCCESS.toString(), this.doLogin("Teste Alter User 2"));
+        String res = this.server.testMessage(MessageList.MESSAGE_GET_USER_DATA.toString());
+        res = res.replace("DATA>", "");
+        JsonObject jsonObject = JsonParser.parseString(res).getAsJsonObject();
+        Assert.assertEquals("Teste Alter User 2", jsonObject.get("nickname").getAsString());
+        Assert.assertEquals("1999", jsonObject.get("birthDate").getAsString());
+        String msg = MessageList.MESSAGE_ALTER_USER_DATA + res.replace("1999", "2000").replace("Alter User", "Novo Alter User").replaceAll(",\"password\":\"[^\"]+\"", "");
+        Assert.assertEquals("Usuário não alterado", MessageList.MESSAGE_SUCCESS.toString(), this.server.testMessage(msg));
+        res = this.server.testMessage(MessageList.MESSAGE_GET_USER_DATA.toString());
+        res = res.replace("DATA>", "");
+        jsonObject = JsonParser.parseString(res).getAsJsonObject();
+        Assert.assertEquals("Teste Novo Alter User 2", jsonObject.get("nickname").getAsString());
+        Assert.assertEquals("2000", jsonObject.get("birthDate").getAsString());
+    }
 
     /**
      * Teste do comando Connected.
@@ -87,6 +110,13 @@ public class ServerTestTest {
             Assert.assertEquals(MessageList.MESSAGE_SUCCESS.toString(), res);
             Thread.sleep(500);
         }
+        Assert.assertEquals(MessageList.MESSAGE_SUCCESS.toString(), this.server.testMessage(MessageList.MESSAGE_LOGOUT.toString()));
+        for(int i = 0; i < 10; i++){
+            res = this.server.testMessage(MessageList.MESSAGE_CONNECTED_STATUS.toString());
+            Assert.assertEquals(MessageList.MESSAGE_SUCCESS.toString(), res);
+            Thread.sleep(500);
+        }
+        Assert.assertThat(this.server.testMessage(MessageList.MESSAGE_LOGOUT.toString()), CoreMatchers.startsWith(MessageList.MESSAGE_ERROR.toString()));
         // Testa por timeout, comentar quando for realizar outros testes.
         Thread.sleep(10000);
         res = this.server.testMessage(MessageList.MESSAGE_CONNECTED_STATUS.toString());

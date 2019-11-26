@@ -7,6 +7,7 @@ package br.udesc.ceavi.dsd.chatiotest;
 public enum MessageList {
     
     MESSAGE_LOGIN("LOGIN>"),
+    MESSAGE_LOGOUT("LOGOUT>"),
     MESSAGE_CONNECTED_STATUS("CONNECTED>"),
     MESSAGE_CREATE_USER("CREATE>"),
     MESSAGE_ALTER_USER_DATA("ALTER>"),
